@@ -1,16 +1,17 @@
 from dotenv.main import load_dotenv
-import numpy as np
 import dbnomics as db
 import pandas as pd
-
+from static_data import pop_countries_rename_dict, rename_dict
 
 load_dotenv()
 
 
 class DataMacro:
     """Class to scrape macroeconomic data"""
+
     def __init__(self, base_year):
         self.base_year = base_year
+        self.countries_to_drop_list = None
 
     @property
     def gdp_constant_prices(self):
@@ -31,8 +32,7 @@ class DataMacro:
         gdp_global = pd.pivot_table(gdp_global, index=gdp_global.index.names, values='value', columns=['date'])
         countries_to_drop_list = gdp_global[gdp_global.iloc[:, -4:].isna().all(axis=1)].index
         gdp_global.drop(index=countries_to_drop_list, inplace=True)
-
-        f'List of countries dropped: {countries_to_drop_list}'
+        self.countries_to_drop_list = countries_to_drop_list.get_level_values("country").to_list()
 
         return gdp_global
 
@@ -41,9 +41,14 @@ class DataMacro:
         pop = db.fetch_series(provider_code='UNDATA',
                               dataset_code='DF_UNDATA_WPP',
                               series_code='SP_POP_TOTL.A._T._T._T..M',
-                              max_nb_series=200)
-        pop = pop.query("period >= '1980' and period <= '2050'")
-        pop = pop[['period', 'value', 'Reference Area']].rename({'period': 'date', 'Reference Area': 'UN_country'}, axis=1)
+                              max_nb_series=300)
+        pop = pop.query("period >= '1990' and period <= '2050'")
+        pop = pop[['period', 'value', 'Reference Area']].rename({'period': 'date', 'Reference Area': 'country'}, axis=1)
+        pop.country = pop.country.replace(pop_countries_rename_dict)
+        pop.country = pop.country.str.replace(' ', '_')
+        pop = pop.query(f"country not in  {self.countries_to_drop_list}")
+        pop.set_index(['country'], inplace=True)
+        pop = pd.pivot_table(pop, index=pop.index, values='value', columns=['date']).T
 
         return pop
 
@@ -59,6 +64,18 @@ class DataMacro:
                                                   'weo-country': 'iso3c',
                                                   'period': 'date'}).sort_values(by=['iso3c', 'date'])
 
+        ppp_fx_base.set_index(['country', 'iso3c'], inplace=True)
+        ppp_fx_base = pd.pivot_table(ppp_fx_base, index=ppp_fx_base.index.names, values='value', columns=['date']).T
+
+        # Data cleaning
+        ppp_fx_base.columns = ppp_fx_base.columns.set_levels(ppp_fx_base.columns.levels[0].str.replace(' ', '_'),
+                                                             level=0)
+        ppp_fx_base.columns = ppp_fx_base.columns.set_levels(
+            ppp_fx_base.columns.levels[0].to_series().replace(rename_dict),
+            level=0)
+        ppp_fx_base.columns = ppp_fx_base.columns.set_levels(
+            ppp_fx_base.columns.levels[0].str.replace(r'St.', 'Saint', regex=True), level=0)
+
         return ppp_fx_base
 
     @property
@@ -67,20 +84,20 @@ class DataMacro:
                                      dataset_code='WEO:latest',
                                      series_code='.NGDP.national_currency',
                                      max_nb_series=300)
-        gdp_curr_p = gdp_curr_p[['WEO Country', 'weo-country', 'period', 'value']].query(f"period == {self.base_year}")\
+        gdp_curr_p = gdp_curr_p[['WEO Country', 'weo-country', 'period', 'value']].query(f"period == {self.base_year}") \
             .rename(columns={'WEO Country': 'country', 'weo-country': 'iso3c', 'period': 'date'}).sort_values(
             by=['iso3c', 'date'])
-
+        gdp_curr_p = gdp_curr_p.query(f"country not in  {self.countries_to_drop_list}")
         gdp_curr_p.set_index(['country', 'iso3c'], inplace=True)
 
         gdp_curr_p = pd.pivot_table(gdp_curr_p, index=gdp_curr_p.index.names, values='value', columns=['date']).T
 
+        # Data cleaning
+        gdp_curr_p.columns = gdp_curr_p.columns.set_levels(gdp_curr_p.columns.levels[0].str.replace(' ', '_'), level=0)
+        gdp_curr_p.columns = gdp_curr_p.columns.set_levels(
+            gdp_curr_p.columns.levels[0].to_series().replace(rename_dict),
+            level=0)
+        gdp_curr_p.columns = gdp_curr_p.columns.set_levels(
+            gdp_curr_p.columns.levels[0].str.replace(r'St.', 'Saint', regex=True), level=0)
+
         return gdp_curr_p
-
-
-
-
-
-
-
-
