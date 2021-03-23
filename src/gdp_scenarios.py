@@ -9,6 +9,7 @@ from helper_functions_ea.data_mappings.country_iso import get_iso
 from helper_functions_ea.shooju_helper.main import ShoojuTools
 from datetime import date
 import shooju
+from dateutil.relativedelta import relativedelta
 
 
 def country_has_region_test(df) -> None:
@@ -157,11 +158,15 @@ class BaselineScenario:
                 }
                 fields_additions[df.columns[n][4]].update(extra_fields)
 
-            if self.run_type == 'baseline':
+            elif self.run_type == 'baseline' or self.run_type == 'scenario':
                 extra_fields = {
                     'type': "Raw",
                     'description': f'Macroeconomic Data for {self.scenario} scenario'
                 }
+                fields_additions[df.columns[n][4]].update(extra_fields)
+
+            else:
+                extra_fields = {}
                 fields_additions[df.columns[n][4]].update(extra_fields)
 
             self.metadata_dictionary.update(fields_additions)
@@ -191,122 +196,20 @@ class BaselineScenario:
         self.upload_to_sj(self.gdp_real_ppp, gdp_real_ppp_fields_dict, **kwargs)
         self.upload_to_sj(self.gdp_per_capita, gdp_per_capita_fields_dict, **kwargs)
 
-    def adjustment1(self, adj_list):
-        """ One country one year """
-
-        x = adj_list[-1]  # % change
-        T = adj_list[-2]  # effective year
-        c_name = adj_list[-3]  # selected country
-        cut_year = f'{int(T)-1}'
-        self.run_type = 'adjustment'
-
-        adj_df = self.gdp_growth.xs(c_name, level=0, axis=1, drop_level=False).loc[T:].apply(
-            lambda p: (1 + 0.01 * x) * p / 100 + 1)
-
-        try:
-            self.gdp_const_p.update(adj_df.droplevel(['region', 'iso2c', 'sid'], axis=1))
-        except Exception as e:
-            pass
-
-        try:
-            self.gdp_const_p.update(adj_df)
-        except Exception as e:
-            raise e
-
-        self.gdp_const_p.loc[cut_year:, (c_name, slice(None))] = self.gdp_const_p.loc[cut_year:, (c_name, slice(None))].cumprod()
-        self.adj_country_list = [c_name]
-        description = f'{x}% growth rate adjustment in {T}'
-
-        # Overwrite baseline values with adjustments
-        self.get_other_economic_variables()
-        self.upload_preprocessing(adj_description=description)
-
-    def adjustment2(self, adj_list):
-        """ All country single year """
-        x = adj_list[-1]  # % change
-        T = adj_list[-2]  # effective year
-        cut_year = f'{int(T) - 1}'
-        self.run_type = 'adjustment'
-        adj_df = self.gdp_growth.loc[T:].apply(lambda p: (1 + 0.01 * x) * p / 100 + 1)
-
-        try:
-            self.gdp_const_p.update(adj_df.droplevel(['region', 'iso2c', 'sid'], axis=1))
-        except Exception:
-            pass
-
-        try:
-            self.gdp_const_p.update(adj_df)
-        except Exception as e:
-            raise e
-
-        self.gdp_const_p.loc[cut_year:, :] = self.gdp_const_p.loc[cut_year:, :].cumprod()
-        self.adj_country_list = self.gdp_const_p.columns.get_level_values('country').to_list()
-        description = f'{x}% real GDP growth rate adjustment in {T}'
-
-        # Overwrite baseline values with adjustments
-        self.get_other_economic_variables()
-        self.upload_preprocessing(adj_description=description)
-
-    def adjustment3(self, adj_list):
-        """ One country all years """
-        x = adj_list[-1]  # % change
-        T = adj_list[-2]  # effective year
-        c_name = adj_list[-3]  # selected country
-        cut_year = f'{int(T) - 1}'
-        self.run_type = 'adjustment'
-        #current_year_str = str(datetime.datetime.now().year + 1) + '-01-01'
-
-        adj_slice = self.gdp_growth.xs(c_name, level=0, axis=1, drop_level=False).loc[T:]
-        t = np.array(range(0, adj_slice.size)).reshape(adj_slice.size, 1)
-        adj_df = (1 + 0.01 * x) ** t * adj_slice / 100 + 1
-
-        try:
-            self.gdp_const_p.update(adj_df.droplevel(['region', 'iso2c', 'sid'], axis=1))
-        except Exception as e:
-            pass
-
-        try:
-            self.gdp_const_p.update(adj_df)
-        except Exception as e:
-            raise e
-
-        self.gdp_const_p.loc[cut_year:, (c_name, slice(None))] = self.gdp_const_p.loc[cut_year:,
-                                                                 (c_name, slice(None))].cumprod()
-        self.adj_country_list = [c_name]
-        description = f'{x}% growth rate adjustment from {T}'
-
-        # Overwrite baseline values with adjustments
-        self.get_other_economic_variables()
-        self.upload_preprocessing(adj_description=description)
-
-    def run_scenario_pipeline(self):
+    def load_inputs_from_sj(self):
         self.load_inputs()
-        self.get_forecasts()
-        self.combine_dfs()
-        self.get_other_economic_variables()
-        self.upload_preprocessing()
-
-
-class Scenario(BaselineScenario):
-    """Class to adjust GDP forecast for a given scenario"""
-
-    def __init__(self, args_dict, scenario_name):
-        super().__init__(args_dict)
-        # self.scenario = args_dict['scenario_name']
-        self.scenario = scenario_name
-
-    def load_inputs(self):
-        super().load_inputs()
 
         # load baseline gdp growth from SJ
         conn = shooju.Connection(server=os.environ["SHOOJU_SERVER"],
                                  user=os.environ["SHOOJU_USER"],
                                  api_key=os.environ["SHOOJU_KEY"])
 
-        sj_growth_df = conn.get_df('sid=users\emilie.allen\GDP\* economic_property="global_macro_GDP_growth" scenario="Baseline"',
-                         fields=['iso3c', 'Country'],
-                         max_points=-1)
+        sj_growth_df = conn.get_df(
+            'sid=users\emilie.allen\GDP\* economic_property="global_macro_GDP_growth" scenario="Baseline"',
+            fields=['iso3c', 'Country'],
+            max_points=-1)
 
+        print('hes')
         # data cleaning
         sj_growth_df.drop(columns='series_id', inplace=True)
         sj_growth_df.sort_values(by=['country', 'date'], inplace=True)
@@ -324,8 +227,79 @@ class Scenario(BaselineScenario):
 
         self.gdp_growth = self.gdp_const_p.pct_change() * 100
 
+    def adjustment1(self, adj_dict):
+        """ Single/Multiple country one year """
+
+        x = adj_dict['adj_value']  # % change
+        T = adj_dict['adj_year']  # effective year
+        c_name = adj_dict['adj_country']  # selected country
+        cut_year = T + relativedelta(years=-1)
+        self.run_type = 'adjustment'
+
+        idx = pd.IndexSlice
+        adj_df = self.gdp_growth.loc[T:, idx[c_name, :]].apply(lambda p: (1 + 0.01 * x) * p / 100 + 1)
+
+        if len(adj_df.columns.levels) > 2:
+            self.gdp_const_p.update(adj_df.droplevel(['region', 'iso2c', 'sid'], axis=1))
+
+        else:
+            self.gdp_const_p.update(adj_df)
+
+        self.gdp_const_p.loc[cut_year:, (c_name, slice(None))] = self.gdp_const_p.loc[cut_year:, (c_name, slice(None))].cumprod()
+        self.adj_country_list = c_name
+        description = f'{x}% growth rate adjustment in {T}'
+
+        # Overwrite baseline values with adjustments
+        self.get_other_economic_variables()
+        self.upload_preprocessing(adj_description=description)
+
+    def adjustment3(self, adj_dict):
+        """ One country all years """
+        x = adj_dict['adj_value']  # % change
+        T = adj_dict['adj_year']  # effective year
+        c_name = adj_dict['adj_country']  # selected country
+        cut_year = T + relativedelta(years=-1)
+        self.run_type = 'adjustment'
+        #current_year_str = str(datetime.datetime.now().year + 1) + '-01-01'
+        idx = pd.IndexSlice
+
+        adj_slice = self.gdp_growth.loc[T:, idx[c_name, :]]
+        t = np.array(range(0, adj_slice.shape[0])).reshape(adj_slice.shape[0], 1)
+        adj_df = (1 + 0.01 * x) ** t * adj_slice / 100 + 1
+
+        if len(adj_df.columns.levels) > 2:
+            self.gdp_const_p.update(adj_df.droplevel(['region', 'iso2c', 'sid'], axis=1))
+
+        else:
+            self.gdp_const_p.update(adj_df)
+
+        self.gdp_const_p.loc[cut_year:, (c_name, slice(None))] = self.gdp_const_p.loc[cut_year:,
+                                                                 (c_name, slice(None))].cumprod()
+        self.adj_country_list = c_name
+        description = f'{x}% growth rate adjustment from {T}'
+
+        # Overwrite baseline values with adjustments
+        self.get_other_economic_variables()
+        self.upload_preprocessing(adj_description=description)
+
     def run_scenario_pipeline(self):
         self.load_inputs()
+        self.get_forecasts()
+        self.combine_dfs()
+        self.get_other_economic_variables()
+        self.upload_preprocessing()
+
+
+class Scenario(BaselineScenario):
+    """Class to adjust GDP forecast for a given scenario"""
+
+    def __init__(self, args_dict):
+        super().__init__(args_dict)
+        self.scenario = args_dict['scenario_name']
+        self.run_type = 'scenario'
+
+    def run_scenario_pipeline(self):
+        super().load_inputs_from_sj()
 
 
 class ScenarioFactory:
