@@ -564,7 +564,7 @@ if mdl_run_type != '<select>':
                                         chart_data = chart_data.append(adj_df)
                                 fig = px.line(chart_data, x="date", y="points", color="country", hover_name="country")
                                 display_df = pd.pivot_table(chart_data, index='country', values='points', columns='date')
-                            push_adj = push_adj.button('Overwrite output', key='push_button1')
+                            push_adj = push_adj.button('Overwrite output', key='s_push_button1')
                             if push_adj:
                                 with st.spinner(text='In progress'):
                                     model_adj_arguments_dict["scenario"] = 'scenario'
