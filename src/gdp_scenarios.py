@@ -77,13 +77,13 @@ class BaselineScenario:
             else:
                 mdl_obj.predict_pipeline()
 
-            # self.forecasts_df = self.forecasts_df.append(mdl_obj.predictions_log.T.set_index(target.columns))
             self.forecasts_df = self.forecasts_df.append(mdl_obj.predictions_log.T.set_index(target.columns))
 
     def combine_dfs(self):
 
         # Join IMF real GDP values with predicted growth rates
         growth_rate_df = self.forecasts_df.div(100).add(1)
+        growth_rate_df.to_csv('forecast_rate.csv')
         full_gdp_df = self.gdp_global.iloc[:, 1:].join(growth_rate_df.iloc[:, 1:])
         full_gdp_df.columns = pd.to_datetime(full_gdp_df.columns)
 
@@ -108,6 +108,9 @@ class BaselineScenario:
 
         # get GDP base nominal/real
         ratio = self.gdp_current_p[self.cols_filter].div(self.gdp_const_p.loc[f'{self.base_year}'])
+        ratio.to_csv('ratio_values.csv')
+        self.gdp_const_p.to_csv('gdp_constant_p.csv')
+        self.ppp_conv_rate[self.cols_filter].to_csv('ppp.csv')
 
         # Apply PPP conversion rates and calculate GDP per capita
         self.population = self.population[self.cols_filter]
@@ -117,6 +120,7 @@ class BaselineScenario:
                                .div(self.population)
                                .div(self.ppp_conv_rate[self.cols_filter].values)
                                .mul(ratio.values))
+        self.gdp_per_capita.to_csv('per_capita.csv')
 
         self.gdp_real_ppp = self.gdp_per_capita.mul(self.population)
 
@@ -209,7 +213,6 @@ class BaselineScenario:
             fields=['iso3c', 'Country'],
             max_points=-1)
 
-        print('hes')
         # data cleaning
         sj_growth_df.drop(columns='series_id', inplace=True)
         sj_growth_df.sort_values(by=['country', 'date'], inplace=True)

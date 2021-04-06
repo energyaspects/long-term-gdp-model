@@ -36,7 +36,11 @@ class GDPModel:
                                          start_Q=1,
                                          max_d=2,
                                          suppress_warnings=True,
-                                         error_action='ignore')
+                                         error_action='ignore',
+                                         seasonal=False,
+                                         stepwise=False,
+                                         with_intercept=True
+                                         )
 
         self.model = auto_arima_model
         self.save_model()
@@ -56,9 +60,11 @@ class GDPModel:
 
     def load_model(self):
         try:
-            #subfolder = self.output_directory / "model_params"
-            #subfolder = 'C:/Users/emilie.allen/PycharmProjects/long - term - gdp - model/src/model_params'
-            self.model = joblib.load(f'C:/Users/emilie.allen/PycharmProjects/long-term-gdp-model/src/model_params/{self.key}_model.pkl')
+            subfolder = self.output_directory / "model_params"
+            # subfolder = 'C:/Users/emilie.allen/PycharmProjects/long - term - gdp - model/src/model_params'
+            # self.model = joblib.load(f'C:/Users/emilie.allen/PycharmProjects/long-term-gdp-model/src/model_params/{self.key}_model.pkl')
+            self.model = joblib.load(subfolder/f'{self.key}_model.pkl')
+
         except Exception as e:
             f"No model found - run train_predict_pipeline() instead"
             raise e
