@@ -5,21 +5,23 @@ import joblib
 from pathlib import Path
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from helper_functions_ea.logger_tool.main import Logger
 
 
 class GDPModel:
 
-    def __init__(self, target, key, args_dict):
+    def __init__(self, target, key, args_dict, imf_fcst_end_year):
         self.target = target
         self.predictions = None
         self.predictions_log = None
         self.model = None
-        self.train_end_year = date(args_dict['train_end_year'], 1, 1)
+        self.train_end_year = date(args_dict['train_end_year'], 1, 1) if args_dict['train_end_year'] else imf_fcst_end_year.date()
         self.fcst_end_year = date(args_dict['fcst_end_year'], 1, 1)
         self.delta = relativedelta(self.fcst_end_year, self.train_end_year).years + 1
         self.index = pd.date_range(start=self.train_end_year, periods=self.delta, freq='YS')
         self.output_directory = args_dict['model_param_path']
         self.key = key
+        self.model_logger = Logger(name="Model Logger").logger
 
     def model_train(self):
         # apply HP filter and get trend
@@ -61,12 +63,10 @@ class GDPModel:
     def load_model(self):
         try:
             subfolder = self.output_directory / "model_params"
-            # subfolder = 'C:/Users/emilie.allen/PycharmProjects/long - term - gdp - model/src/model_params'
-            # self.model = joblib.load(f'C:/Users/emilie.allen/PycharmProjects/long-term-gdp-model/src/model_params/{self.key}_model.pkl')
             self.model = joblib.load(subfolder/f'{self.key}_model.pkl')
 
         except Exception as e:
-            f"No model found - run train_predict_pipeline() instead"
+            self.model_logger.error("No model found - run train_predict_pipeline() instead")
             raise e
 
     def train_predict_pipeline(self):
