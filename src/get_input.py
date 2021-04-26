@@ -67,7 +67,7 @@ class DataMacro:
         gdp_global.drop(index=countries_to_drop_list, inplace=True)
 
         # Get list of countries with missing recent values (i.e. after 2022)
-        # Add countries with known missing historical data (clearly specified in methodology and country grouping list)
+        # Add countries with known missing historical data (clearly specified in the methodology and country grouping list)
         self.countries_to_drop_list = (countries_to_drop_list.get_level_values("country").to_list() +
                                        ["Eritrea", "Nauru", "Palau", "San_Marino", "South_Sudan", "Timor-Leste"])
 

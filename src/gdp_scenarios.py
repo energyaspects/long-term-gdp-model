@@ -84,7 +84,7 @@ class BaselineScenario:
         self.cols_filter = None
         self.adj_country_list = []
         self.run_type = 'baseline'
-        self.country_region_mapping = pd.read_excel(r'utils\region_aggregates.xlsx', sheet_name='new_list')
+        self.country_region_mapping = pd.read_excel(r'utils\region_aggregates.xlsx', sheet_name='new_list', keep_default_na=False)
         self.scenario_logger = Logger(name="Scenario Logger").logger
 
     def load_inputs(self):
@@ -171,7 +171,13 @@ class BaselineScenario:
                                .mul(ratio.values))
 
         # Fill missing historical values
-        # Filter countries with NANs
+        # Use IMF historical GDP/c values for Russia (CEPII too high)-other countries IMF historical data not available
+        idx = pd.IndexSlice
+        imf_hist_per_cap_russia = [21.433, 20.296]
+        self.gdp_per_capita.loc['1990':'1991', idx[:, 'RUS']] = imf_hist_per_cap_russia
+
+        # Filter other countries with NANs
+
         cty_missing_values_list = (self.gdp_per_capita[self.gdp_per_capita.columns[self.gdp_per_capita.isna().any(0)]]
                                    .columns.get_level_values('iso3c').to_list())
 
@@ -323,7 +329,7 @@ class BaselineScenario:
                                  user=os.environ["SHOOJU_USER"],
                                  api_key=os.environ["SHOOJU_KEY"])
         sj_growth_df = conn.get_df(
-            f'sid={self.sj_path}\* economic_property="global_macro_GDP_growth" scenario="Baseline"',
+            fr'sid={self.sj_path}\* economic_property="global_macro_GDP_growth" scenario="Baseline"',
             fields=['iso3c', 'Country'],
             df=date(2019, 1, 1),
             max_points=-1)

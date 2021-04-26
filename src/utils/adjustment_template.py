@@ -14,10 +14,10 @@ Provide percentage change, effective year, adjustment type and country name list
 adjustments allowed but they need to be specified under individual 'adjustment_summary' key.
 
 Items description:
-    - percentage change (adj_value): adjustment percentage applied to the GDP forecast
-    - effective year: year to apply % change
-    - country name: name of country used in scenario
-    - adjustment type: adj_1 or adj_2
+    - percentage change (adj_value): adjustment percentage applied to the GDP forecast (int)
+    - effective year: year to apply % change (int)
+    - country name: name of country used in scenario (list)
+    - adjustment type: adj_1 or adj_2 (str)
 
 Types of adjustment:
     - Adjustment1 (adj_1): Adjust forecast on a specific year and smooth forecasts for subsequent years for a given 

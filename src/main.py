@@ -44,7 +44,7 @@ def _parse_args():
     parser.add_argument("--scenario",
                         default="baseline",
                         choices=["baseline", "scenario"],
-                        help="Select the scenario - any scenario other than baseline will require 'scenario_params'."
+                        help="Select the scenario - any scenario other than baseline will require 'scenario_name' and 'adjustment."
                              "Choices description:"
                              "Baseline: uses model output"
                              "Scenario: uses Baseline values and apply adjustments "
@@ -75,7 +75,7 @@ def main():
     if parser.PROD:
         sj_path = None  # TODO: to be defined once ready to go live
     else:
-        sj_path = f"users\{os.environ['SHOOJU_USER']}\GDP"
+        sj_path = fr"users\{os.environ['SHOOJU_USER']}\GDP"
 
     args_dict = vars(parser)
 
