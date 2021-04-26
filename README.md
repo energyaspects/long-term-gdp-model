@@ -85,6 +85,7 @@ Install requirements and run script on terminal from project root directory.
 #### Run script
 
 `cd src`
+
 `python main.py`
 
 
@@ -105,9 +106,10 @@ Optional arguments:
   --model_param_path MODEL_PARAM_PATH
                            Provide path to store models
   --scenario  {baseline,scenario}
-                           Select the scenario - any scenario other than baseline will require scenario_params parameter
+                           Select the scenario - any scenario other than baseline will require 'scenario_name' and 'adjustment.
                            (default=baseline)
-  --adjustment             Parse if adjustments - update the adjustment template file in utils with adjustment values.                 
+  --adjustment             Parse if adjustments - update the adjustment template file in utils with adjustment values.
+  --adjustment_only        Parse to apply adjusments only (use existing forecasts) (default=False)                 
   --port      PORT         (default=52162)
   --scenario_name   SCENARIO_NAME
                            Provide a meaningful scenario name i.e. 'High_growth              
