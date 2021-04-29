@@ -423,8 +423,8 @@ class BaselineScenario:
 class Scenario(BaselineScenario):
     """Class to adjust GDP forecast for a given scenario."""
 
-    def __init__(self, args_dict):
-        super().__init__(args_dict)
+    def __init__(self, args_dict, sj_path):
+        super().__init__(args_dict, sj_path)
         self.scenario = args_dict['scenario_name']
         self.run_type = 'scenario'
 
@@ -438,6 +438,6 @@ class ScenarioFactory:
         if arg_dict['scenario'] == 'baseline':
             return BaselineScenario(arg_dict, sj_path)
         elif arg_dict['scenario'] == 'scenario':
-            return Scenario(arg_dict)
+            return Scenario(arg_dict, sj_path)
         else:
             f"Warning: the scenario parsed doesn't exist"

@@ -109,7 +109,7 @@ Optional arguments:
                            Select the scenario - any scenario other than baseline will require 'scenario_name' and 'adjustment.
                            (default=baseline)
   --adjustment             Parse if adjustments - update the adjustment template file in utils with adjustment values.
-  --adjustment_only        Parse to apply adjusments only (use existing forecasts) (default=False)                 
+  --adjustment_only        Parse to apply adjustments only (use existing forecasts) (default=False)                 
   --port      PORT         (default=52162)
   --scenario_name   SCENARIO_NAME
                            Provide a meaningful scenario name i.e. 'High_growth              

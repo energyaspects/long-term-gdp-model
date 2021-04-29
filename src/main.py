@@ -59,6 +59,7 @@ def _parse_args():
                         action="store_true")
     parser.add_argument("--port", default=52162)
     parser.add_argument("--scenario_name",
+                        default="",
                         type=str,
                         help="Provide a meaningful scenario name i.e. 'High_growth'")
 
@@ -81,7 +82,7 @@ def main():
 
     fcst_obj = ScenarioFactory.run_scenario(args_dict, sj_path)
 
-    if not parser.adjustment_only:
+    if not parser.adjustment_only and parser.scenario == 'baseline':
         main_logger.info("Running GDP model.")
         fcst_obj.run_scenario_pipeline()
 
