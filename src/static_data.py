@@ -38,7 +38,8 @@ extended_iso_dict = {
     'other_middle': 'omiddle',
     'other_latam': 'olatam',
     'other_fsu': 'ofsu',
-    'other_europe': 'oeuro'
+    'other_europe': 'oeuro',
+    'world': 'W'
 }
 
 pop_countries_rename_dict = {'Bolivia (Plurinational State of)': 'Bolivia',
@@ -61,3 +62,12 @@ pop_countries_rename_dict = {'Bolivia (Plurinational State of)': 'Bolivia',
                              "United States of America": "US",
                              "Venezuela (Bolivarian Republic of)": 'Venezuela',
                              "Viet Nam": 'Vietnam'}
+
+prop_unit_dict = {
+    'Other_Latam': 'olatam/LatAm(covered) GDP/capita',
+    'Other_Europe': 'oeuro/Europe(covered) GDP/capita',
+    'Other_Middle': 'omiddle/Middle_East(covered) GDP/capita',
+    'Other_FSU': 'ofsu/FSU(covered) GDP/capita',
+    'Other_Asia': 'oasia/Asia(covered) GDP/capita',
+    'Other_Africa': 'oafr/Africa(covered) GDP/capita'
+}
