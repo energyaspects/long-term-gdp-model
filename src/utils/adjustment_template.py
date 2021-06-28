@@ -1,11 +1,20 @@
 # Use this template to parse adjustments when running the GDP model
 
+# adjustment_dict = {
+#     'adjustment_summary_1': {
+#         'adj_type': 'adj_1',
+#         'adj_year': 2026,
+#         'adj_country': ['China', 'France'],
+#         'adj_value': 3
+#     }
+# }
+
 adjustment_dict = {
     'adjustment_summary_1': {
         'adj_type': 'adj_1',
         'adj_year': 2026,
-        'adj_country': ['China', 'France'],
-        'adj_value': 3
+        'adj_country': [],
+        'adj_value': 0
     }
 }
 
