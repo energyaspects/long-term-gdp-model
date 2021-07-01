@@ -13,12 +13,13 @@ can be found here: https://energyaspects.atlassian.net/wiki/spaces/RES/pages/180
 * Population - DBnomics (UNDATA; DF_UNDATA_WPP; .SP_POP_TOTL.A._T._T._T..M)
 * PPP conversion rate - DBnomics (IMF; WEO; .PPPEX)
 * GDP current prices (national currency) - DBnomics (IMF; WEO; .NGDP)
+* GDP/Capita (for missing IMF historical values) - DBnomics(CEPII; CHELEM-GDP; .GDP-PPP-CAP)
 
 
 ### II. Model parameters
 
-We are fitting an auto-arima model, from the Pmdarima statistical library.
-The auto-ARIMA process seeks to identify the most optimal parameters for an ARIMA model, settling on a single fitted ARIMA model.
+We are fitting an auto-ARIMA model, from the Pmdarima statistical library.
+The auto-ARIMA process seeks to identify the optimal parameters for an ARIMA model, settling on a single fitted ARIMA model.
 
 `auto_arima_model = pm.auto_arima(train,
                                          start_p=1,
@@ -37,7 +38,7 @@ Key parameters:
 * `max_d=2` - The order of first-differencing shouldn't exceed 2.
 * `with_intercept=True` - Force the model to include an intercept term. This is essential to replicate EViews behaviour.
 * `seasonal=False` - The data is SA-adjusted, so no seasonal adjustment is needed.
-* `stepwise=False` - if True, with_intercept is reset to 'auto' to selectively change it to `False` in the presence of certain
+* `stepwise=False` - If True, with_intercept is reset to 'auto' to selectively change it to `False` in the presence of certain
   differencing conditions.
 
 
@@ -53,21 +54,24 @@ Our GDP growth forecasts are used to derive the following macro economic variabl
 * Real GDP (B$2017)
 
 All model outputs can be viewed using this SJ dashboard: 
-https://energyaspects.shooju.com/#views/bvlzhmioneafxwhydmci/4d3930a11386dd2fa6a1bb17271a9754
+https://energyaspects.shooju.com/#views/pfswptknxamtttrdtcsh/3f6c27a42828546a65abf8f5ab8701b9
 
 ### IV. Adjustments & Scenarios
 
-Adjustments can be applied to the baseline GDP growth values of any given country. There
-are two types of adjustments:
+Adjustments can be applied to the baseline GDP growth values of any given country. Once the forecasts are
+updated in SJ, the model should be run using the `--update_other_variables` parameter.
+
+On top of the baseline adjustments, user defined scenarios can be created using the
+following adjustment types. Output are stored on SJ under new SIDs and subsequent models can
+be run using a specific scenario other than the baseline.
+
+There are two types of scenario adjustments (country level):
 * Type I - apply % adjustment to a specific year i.e: +1% in 2022.
 * Type II - apply % adjustment to each year from base year onwards i.e: +2% from 2025.
 
-On top of the baseline adjustments, user defined scenarios can be created using the
-same adjustment types. Output are stored in SJ under new SIDs and subsequent models can
-be run using a specific scenario other than the baseline.
+Adjustments are currently done via the GDP Adjustment Excel Dashboard saved on the E: drive
+`E:\3'. Research - Long-term\2. Spreadsheets\Long-term Macro\GDP_adjustment_dashboard.xlsx`.
 
-At the moment, adjustments should be parsed using the adjustment_template file stored in the utils folder.
-A dashboard will be made available to users once finished.
 
 ## How to run 
 
@@ -81,6 +85,9 @@ Install requirements and run script on terminal from project root directory.
 #### Install package
 
 `python setup.py install`
+
+#### Add the GROUPING_SHEET_PATH to your .env file
+`GROUPING_SHEET_PATH = "E:/3. Research - Long-term/2. Spreadsheets/Long-term Methodology and assumptions/region_aggregates.xlsx"`
 
 #### Run script
 
@@ -108,8 +115,8 @@ Optional arguments:
   --scenario  {baseline,scenario}
                            Select the scenario - any scenario other than baseline will require 'scenario_name' and 'adjustment.
                            (default=baseline)
-  --adjustment             Parse if adjustments - update the adjustment template file in utils with adjustment values.
-  --adjustment_only        Parse to apply adjustments only (use existing forecasts) (default=False)                 
+  --update_other_variables Parse to update other variables with adjusted baseline only
+  --update_proportions     Parse if you want to update the current other_region/region ratios 
   --port      PORT         (default=52162)
   --scenario_name   SCENARIO_NAME
                            Provide a meaningful scenario name i.e. 'High_growth              

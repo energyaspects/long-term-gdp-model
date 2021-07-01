@@ -38,9 +38,10 @@ def imf_base_data_transformation(df: pd.DataFrame, base_year: int, countries_to_
 class DataMacro:
     """Class to scrape macroeconomic data from DBnomics."""
 
+    countries_to_drop_list = None
+
     def __init__(self, base_year, **kwargs):
         self.base_year = base_year
-        self.countries_to_drop_list = None
         self.cty_missing_values = kwargs.get('cty_missing_values_list')
         self.input_logger = Logger(name="Input Data Logger").logger
 

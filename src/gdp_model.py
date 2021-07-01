@@ -9,12 +9,14 @@ from helper_functions_ea.logger_tool.main import Logger
 
 
 class GDPModel:
+    """Class fitting an auto-ARIMA model to forecast GDP growth."""
+
+    predictions = None
+    predictions_log = None
+    model = None
 
     def __init__(self, target, key, args_dict, imf_fcst_end_year):
         self.target = target
-        self.predictions = None
-        self.predictions_log = None
-        self.model = None
         self.train_end_year = date(args_dict['train_end_year'], 1, 1) if args_dict['train_end_year'] else imf_fcst_end_year.date()
         self.fcst_end_year = date(args_dict['fcst_end_year'], 1, 1)
         self.delta = relativedelta(self.fcst_end_year, self.train_end_year).years + 1

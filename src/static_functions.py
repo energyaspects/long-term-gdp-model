@@ -46,6 +46,8 @@ def country_name_index_formatting(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_sub_region_aggregates(df):
+    """Return two dataframes with aggregates for countries in 'other regions' and those covered by the lT service."""
+
     covered_cty_df = df.loc(axis=1)[:, :, :,
                      ['Africa', 'Asia-Pacific', 'Europe', 'FSU', 'Latin_America', 'Middle_East']].groupby(level=3,
                                                                                                           axis=1).sum()
@@ -60,6 +62,8 @@ def get_sub_region_aggregates(df):
 
 
 def get_region_aggregates_standard(df):
+    """Return a dataframe with regional aggregates (including World)."""
+
     region_df = df.groupby(level=2, axis=1).sum()
     region_df = region_df.assign(World=region_df.sum(axis=1))
 
@@ -67,6 +71,8 @@ def get_region_aggregates_standard(df):
 
 
 def get_region_aggregates_multi(df, other_df):
+    """Return a dataframe with regional aggregates (including World) using the 'other_regions' df."""
+
     other_region_df = other_df.groupby(level=0, axis=1).sum()
     other_region_df.columns = other_region_df.columns.str.replace('Other_', "")
     other_region_df.rename({'Asia': 'Asia-Pacific', 'Latam': 'Latin_America', 'Middle': 'Middle_East'}, axis=1, inplace=True)

@@ -33,8 +33,8 @@ def _parse_args():
                         default=False,
                         action="store_true")
     parser.add_argument("--update_proportions",
-                        help="Pass if you want to update the current other_region/region ratios",
-                        default=True,
+                        help="Parse if you want to update the current other_region/region ratios",
+                        default=False,
                         action="store_true")
     parser.add_argument("--PROD",
                         help="Provide Shooju path to store outputs",

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 from get_input import DataMacro
 from gdp_model import GDPModel
 from static_data import extended_iso_dict, prop_unit_dict
@@ -43,7 +44,7 @@ class BaselineScenario:
         self.sj_path = sj_path
         self.train_end_year = date(args_dict['train_end_year'], 1, 1) if args_dict['train_end_year'] else None
         self.run_type = 'baseline'
-        self.country_region_mapping = pd.read_excel(r'utils\region_aggregates.xlsx', sheet_name='new_list',
+        self.country_region_mapping = pd.read_excel(os.environ["GROUPING_SHEET_PATH"], sheet_name='new_list',
                                                     keep_default_na=False)
         self.scenario_logger = Logger(name="Scenario Logger").logger
 
@@ -215,7 +216,6 @@ class BaselineScenario:
         o_pop, c_pop = get_sub_region_aggregates(self.population)
 
         c_gdp_per_c = c_gdp.div(c_pop)
-        # c_gdp_per_c.to_csv('c_per_capita.csv')
 
         if self.update_proportions:
             o_gdp_per_c = o_gdp.div(o_pop)
@@ -267,7 +267,7 @@ class BaselineScenario:
 
         # Get list of modelled series (i.e. model output not aggregate) & published series
         series_published = self.country_region_mapping.Published.to_list() + list(
-            self.country_region_mapping.Region_iso3c.unique())
+            self.country_region_mapping.Region_iso3c.unique() + 'W')
 
         # Add iso2c and construct sids
         df.columns = pd.MultiIndex.from_tuples([(c[0], c[1], c[2], c[3],
